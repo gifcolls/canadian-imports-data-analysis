@@ -1,3 +1,6 @@
 pandas
 numpy
 scikit-learn
+sqlalchemy
+jupyter
+
