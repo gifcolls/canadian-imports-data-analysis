@@ -34,9 +34,5 @@ cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
 tables = cursor.fetchall()
 print("Tables in the database:", tables)
 
-query = "SELECT * FROM imports LIMIT 10"
-df_check = pd.read_sql_query(query, conn)
-print("First 10 rows from the imports table:")
-print(df_check)
-conn.close()
+
 

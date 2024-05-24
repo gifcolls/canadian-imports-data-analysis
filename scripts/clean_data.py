@@ -1,47 +1,44 @@
 import pandas as pd
+from sqlalchemy import create_engine
+import sqlite3
 import os
-import numpy as np
 
-# List of csv files with direct download links
-csv_files = [
-    # id_2019 = 1k-fn2pPNPY8rJZea_RLrbs5tMyK0DkQ8
-    'https://drive.google.com/uc?export=download&id=1k-fn2pPNPY8rJZea_RLrbs5tMyK0DkQ8',
-    # id_2020 = 1HVezgDvQW1pHV-7l5FObBcIg3_1rbBpD
-    'https://drive.google.com/uc?export=download&id=1HVezgDvQW1pHV-7l5FObBcIg3_1rbBpD',
-    # id_2021 = 1moc-jF6AtYw-1EXEKKqlt91WgN7T-cq1
-    'https://drive.google.com/uc?export=download&id=1moc-jF6AtYw-1EXEKKqlt91WgN7T-cq1',
-    # id_2022 = 1JUI8nUnAy3Es2TbEczNO1hbt7j18df1V
-    'https://drive.google.com/uc?export=download&id=1JUI8nUnAy3Es2TbEczNO1hbt7j18df1V',
-    # id_2023 = 1kgIKquJ9KSbvmTpHJsFlpXZJnM5P-v9x
-    'https://drive.google.com/uc?export=download&id=1kgIKquJ9KSbvmTpHJsFlpXZJnM5P-v9x'
-]
+def clean_data(df):
+    df.columns = ['Category', 'Value', 'Year']
+    df = df.dropna(subset=['Category']).copy()
+    df.loc[:, 'Value'] = df['Value'].replace('[\$,]', '', regex=True).astype(float)
+    return df
 
-#Combining all the CSV files into a one dataframe
-df_list = []
-for file in csv_files:
-    df = pd.read_csv(file)
-    df_list.append(df)
+# Database connection with absolute path
+db_path = 'C:/Users/berli/canadian-imports-data-analysis/data/canadian_imports.db'
+engine = create_engine(f'sqlite:///{db_path}')
 
-#Concatenate all dataframes
-combined_df= pd.concat(df_list, ignore_index=True)
+# Connect to the database
+conn = sqlite3.connect(db_path)
 
-#Display the information
-print(combined_df.info())
-print(combined_df.head())
+# Query raw data
+query = "SELECT * FROM raw_imports"
+df_raw = pd.read_sql_query(query, conn)
 
-#Check for missing values
-print(combined_df.isnull().sum())
+# Clean data
+df_cleaned = clean_data(df_raw)
 
-#Fill missing vlues
-for column in combined_df.select_dtypes(include=[np.number]).columns:
-    combined_df[column].fillna(combined_df[column].mean(), inplace=True)
-    
+# Cleaned data directory exists
+cleaned_data_dir = '../data/cleaned'
 
-#Rmove duplicates
-combined_df.drop_duplicates(inplace=True)
+# Save cleaned data to CSV
+cleaned_path = os.path.join(cleaned_data_dir, 'cleaned_imports.csv')
+df_cleaned.to_csv(cleaned_path, index=False)
+print(f"Cleaned data saved to {cleaned_path}")
 
-#Convert date column to datetime format
-combined_df['Year'] = pd.to_datetime(combined_df['Year'], format='%Y')
+# Load cleaned data into the database
+df_cleaned.to_sql('cleaned_imports', con=engine, if_exists='replace', index=False)
+print("Cleaned data loaded successfully into the database.")
 
-#Save cleaned data
-combined_df.to_csv('data/cleaned_data.csv', index=False)
+# Verify cleaned data insertion
+query = "SELECT * FROM cleaned_imports LIMIT 10"
+df_check = pd.read_sql_query(query, conn)
+print("First 10 rows from the cleaned_imports table:")
+print(df_check)
+
+conn.close()
