@@ -3,11 +3,14 @@ from sqlalchemy import create_engine
 import sqlite3
 import os
 
+
 def clean_data(df):
     df.columns = ['Category', 'Value', 'Year']
     df = df.dropna(subset=['Category']).copy()
-    df.loc[:, 'Value'] = df['Value'].replace('[\$,]', '', regex=True).astype(float)
+    df.loc[:, 'Value'] = df['Value'].replace(
+        '[\$,]', '', regex=True).astype(float)
     return df
+
 
 # Database connection with absolute path
 db_path = 'C:/Users/berli/canadian-imports-data-analysis/data/canadian_imports.db'
@@ -32,7 +35,8 @@ df_cleaned.to_csv(cleaned_path, index=False)
 print(f"Cleaned data saved to {cleaned_path}")
 
 # Load cleaned data into the database
-df_cleaned.to_sql('cleaned_imports', con=engine, if_exists='replace', index=False)
+df_cleaned.to_sql('cleaned_imports', con=engine,
+                  if_exists='replace', index=False)
 print("Cleaned data loaded successfully into the database.")
 
 # Verify cleaned data insertion

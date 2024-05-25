@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 import sqlite3
 
 # Database connection with absolute path
-db_path = 'C:/Users/berli/canadian-imports-data-analysis/canadian_imports.db'
+db_path = 'C:/Users/berli/canadian-imports-data-analysis/data/canadian_imports.db'
 engine = create_engine(f'sqlite:///{db_path}')
 
 # File paths
@@ -16,15 +16,11 @@ file_paths = [
 ]
 years = range(2019, 2024)
 
-for file_path, year in zip(file_paths, years):
+for file_path in file_paths:
     df = pd.read_csv(file_path, skiprows=6, header=None)
-    df.columns = ['Category', 'Value']
-    df = df.dropna(subset=['Category'])
-    df['Year'] = year
-    print(f"First few rows of the data for {year}:")
-    print(df.head())
-    df.to_sql('imports', con=engine, if_exists='append', index=False)
-
+print(f"First few raws of the data from {file_path}:")
+print(df.head())
+df.to_sql('raw_imports', con=engine, if_exists='append', index=False)
 print("Data loaded successfully into the database.")
 
 # Verify table creation and data insertion
@@ -33,6 +29,3 @@ cursor = conn.cursor()
 cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
 tables = cursor.fetchall()
 print("Tables in the database:", tables)
-
-
-
