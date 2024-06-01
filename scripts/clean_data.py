@@ -38,21 +38,23 @@ file_paths = [
 ]
 years = [2019, 2020, 2021, 2022, 2023]
 
-# Initialize an empty DataFrame to store cleaned data
+# Initializing an empty DataFrame to store cleaned data
 df_cleaned_total = pd.DataFrame()
 
 for file_path, year in zip(file_paths, years):
     df_raw = pd.read_csv(file_path, skiprows=6, header=None)
     df_cleaned = clean_data(df_raw, year)
-    df_cleaned_total = pd.concat([df_cleaned_total, df_cleaned], ignore_index=True)
+    df_cleaned_total = pd.concat(
+        [df_cleaned_total, df_cleaned], ignore_index=True)
 
 # Additional Data Cleaning Steps
 # Check for missing values
 missing_values = df_cleaned_total.isnull().sum()
 print("Missing values in each column:\n", missing_values)
 
-# Handle missing values (example: fill with the mean or drop)
-df_cleaned_total['Value'] = df_cleaned_total['Value'].fillna(df_cleaned_total['Value'].mean())
+# Handle missing values
+df_cleaned_total['Value'] = df_cleaned_total['Value'].fillna(
+    df_cleaned_total['Value'].mean())
 
 # Check for duplicates
 duplicate_rows = df_cleaned_total.duplicated().sum()
@@ -61,15 +63,16 @@ print("Number of duplicate rows:", duplicate_rows)
 # Remove duplicates
 df_cleaned_total = df_cleaned_total.drop_duplicates()
 
-# Convert 'Year' column to integer if it's not already
+# Convert 'Year' column to integer
 df_cleaned_total['Year'] = df_cleaned_total['Year'].astype(int)
 
-# Convert 'Value' column to float if it's not already
+# Convert 'Value' column to float 
 df_cleaned_total['Value'] = df_cleaned_total['Value'].astype(float)
 
 # Handling Outliers
 # Calculate the Z-scores of the 'Value' column
-z_scores = np.abs((df_cleaned_total['Value'] - df_cleaned_total['Value'].mean()) / df_cleaned_total['Value'].std())
+z_scores = np.abs(
+    (df_cleaned_total['Value'] - df_cleaned_total['Value'].mean()) / df_cleaned_total['Value'].std())
 outliers = z_scores > 3  # Consider values with Z-score > 3 as outliers
 print("Number of outliers:", np.sum(outliers))
 
@@ -77,23 +80,27 @@ print("Number of outliers:", np.sum(outliers))
 print("Outliers:")
 print(df_cleaned_total[outliers])
 
+
 def remove_outliers(df):
     while True:
-        z_scores = np.abs((df['Value'] - df['Value'].mean()) / df['Value'].std())
+        z_scores = np.abs(
+            (df['Value'] - df['Value'].mean()) / df['Value'].std())
         outliers = z_scores > 3  # Consider values with Z-score > 3 as outliers
         if not outliers.any():
             break
         df = df[~outliers]
     return df
 
-# Remove outliers iteratively
+
+# Removing outliers iteratively
 df_cleaned_total = remove_outliers(df_cleaned_total)
 
-# Reset index to ensure proper alignment
+# Reseting index to ensure proper alignment
 df_cleaned_total.reset_index(drop=True, inplace=True)
 
-# Verify the number of outliers after removal
-z_scores_after = np.abs((df_cleaned_total['Value'] - df_cleaned_total['Value'].mean()) / df_cleaned_total['Value'].std())
+# Verifying the number of outliers after removal
+z_scores_after = np.abs(
+    (df_cleaned_total['Value'] - df_cleaned_total['Value'].mean()) / df_cleaned_total['Value'].std())
 outliers_after = z_scores_after > 3
 print("Number of outliers after removal:", np.sum(outliers_after))
 
@@ -113,7 +120,8 @@ df_cleaned_total.to_csv(cleaned_path, index=False)
 print(f"Cleaned data saved to {cleaned_path}")
 
 # Load cleaned data into the database
-df_cleaned_total.to_sql('cleaned_imports', con=engine, if_exists='replace', index=False)
+df_cleaned_total.to_sql('cleaned_imports', con=engine,
+                        if_exists='replace', index=False)
 print("Cleaned data loaded successfully into the database.")
 
 # Verify cleaned data insertion
