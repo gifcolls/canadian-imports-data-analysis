@@ -5,3 +5,6 @@ sqlalchemy
 jupyter
 matplotlib
 seaborn
+statsmodels
+pystan
+fbprophet
